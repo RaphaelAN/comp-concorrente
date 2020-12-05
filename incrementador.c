@@ -1,7 +1,7 @@
 /* Disciplina: Computacao Concorrente */
 /* Prof.: Silvana Rossetto */
 /* Módulo 1 - Laboratório: 1 */
-/* Codigo: "Hello World" usando threads em C passando mais de um argumento */
+/* Codigo: "incrementador" usando threads em C para incrementar todos os indices de um vetor */
 
 #include <stdio.h>
 #include <stdlib.h> 
