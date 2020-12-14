@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h> 
 #include <pthread.h>
+#include "timer.h"
 
 float *matrix_A;
 float *adjancent_B;
@@ -29,29 +30,31 @@ void *multiply (void *arg) {
         {
             sum = 0;
             for(int i = 0; i < matrix_size; i++){
-                sum +=  matrix_A[column + line*matrix_size] * adjancent_B[column + line*matrix_size];
+                sum +=  matrix_A[i + line*matrix_size] * adjancent_B[i + line*matrix_size];
             }
             result[column + line*matrix_size] = sum;
         }
     }
-    free(arg); //aqui pode liberar a alocacao feita na main
-
     pthread_exit(NULL);
 }
 
 int main(int argc, char* argv[]) {
     int matrix_dimension;
     int num_threads;
+    double start, end, elapsed;
     if(argc < 3){
         printf("Digite: %s <dimensões da matriz> <numero de threads>", argv[0]);
         return 1;
     }
+    printf("Inicializando estruturas!\n");
+    GET_TIME(start);
+
     matrix_dimension = atoi(argv[1]);
     num_threads = atoi(argv[2]);
     pthread_t tid_sistema[num_threads];
-    t_Args *arg; //receberá os argumentos para a thread
-
-
+    
+    t_Args *args = (t_Args*) malloc(sizeof(t_Args) * num_threads); //receberá os argumentos para a thread
+    if (args == NULL) {printf("--ERRO: malloc()\n\n"); exit(-1);}
     matrix_A = (float*) malloc(sizeof(float) * matrix_dimension * matrix_dimension);
     if (matrix_A == NULL) {printf("ERROR -- maloc\n"); return 2;}
     adjancent_B = (float*) malloc(sizeof(float) * matrix_dimension * matrix_dimension);
@@ -67,18 +70,20 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    GET_TIME(end);
+    elapsed = end - start;
+    printf("Inicialização levou: %lf segundos\n", elapsed);
+
     printf("\nExecutando a multiplicação de matrizes AxB = R de %d dimensões com %d threads:\n", matrix_dimension, num_threads);
 
+    GET_TIME(start);
+
     for(int i = 0; i < num_threads; i++){
-        arg = malloc(sizeof(t_Args));
-        if (arg == NULL) {
-            printf("--ERRO: malloc()\n\n"); exit(-1);
-        }
-        arg->thread_num = i;
-        arg->matrix_size = matrix_dimension;
-        arg->num_threads = num_threads;
+        (args + i)->thread_num = i;
+        (args + i)->matrix_size = matrix_dimension;
+        (args + i)->num_threads = num_threads;
         printf("--Cria a thread %d\n\n", i);
-        if (pthread_create(&tid_sistema[i], NULL, multiply, (void*) arg)) {
+        if (pthread_create(&tid_sistema[i], NULL, multiply, (void*) (args+i))) {
             printf("--ERRO: pthread_create()\n\n"); exit(-1);
         }
     }
@@ -88,7 +93,16 @@ int main(int argc, char* argv[]) {
             printf("--ERRO: pthread_join() \n\n"); exit(-1); 
         } 
     }
-    //show results
+
+    GET_TIME(end);
+    elapsed = end - start;
+    printf("Execução levou: %lf segundos\n", elapsed);
+
+    printf("Finalizando o programa\n");
+    GET_TIME(start);
+
+    //show results - Desabilitado pois printar matriz de 2000 x 2000 é inviavel.
+    
     printf("\nMatriz A\n");
     for(int i = 0; i < matrix_dimension; i++){
         for(int j = 0; j < matrix_dimension; j++){
@@ -110,7 +124,13 @@ int main(int argc, char* argv[]) {
         }
         puts("");
     }
+    
     free(matrix_A);
     free(adjancent_B);
     free(result);
+    free(args);
+
+    GET_TIME(end);
+    elapsed = end - start;
+    printf("Finalização levou: %lf segundos\n", elapsed);
 }
