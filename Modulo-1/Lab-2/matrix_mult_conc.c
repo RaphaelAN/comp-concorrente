@@ -24,8 +24,8 @@ void *multiply (void *arg) {
     int num_threads = args->num_threads;
     int line;
     int column;
-    int sum;
-    for(line = thread_num; line < (matrix_size * matrix_size); line += num_threads){
+    double sum;
+    for(line = thread_num; line < matrix_size; line += num_threads){
         for(column = 0; column < matrix_size; column++)
         {
             sum = 0;
@@ -41,7 +41,7 @@ void *multiply (void *arg) {
 int main(int argc, char* argv[]) {
     int matrix_dimension;
     int num_threads;
-    double start, end, elapsed;
+    double start, end, elapsed, total_time;
     if(argc < 3){
         printf("Digite: %s <dimensões da matriz> <numero de threads>", argv[0]);
         return 1;
@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
     matrix_dimension = atoi(argv[1]);
     num_threads = atoi(argv[2]);
     pthread_t tid_sistema[num_threads];
-    
+
     t_Args *args = (t_Args*) malloc(sizeof(t_Args) * num_threads); //receberá os argumentos para a thread
     if (args == NULL) {printf("--ERRO: malloc()\n\n"); exit(-1);}
     matrix_A = (float*) malloc(sizeof(float) * matrix_dimension * matrix_dimension);
@@ -72,6 +72,7 @@ int main(int argc, char* argv[]) {
 
     GET_TIME(end);
     elapsed = end - start;
+    total_time += elapsed;
     printf("Inicialização levou: %lf segundos\n", elapsed);
 
     printf("\nExecutando a multiplicação de matrizes AxB = R de %d dimensões com %d threads:\n", matrix_dimension, num_threads);
@@ -96,13 +97,14 @@ int main(int argc, char* argv[]) {
 
     GET_TIME(end);
     elapsed = end - start;
+    total_time += elapsed;
     printf("Execução levou: %lf segundos\n", elapsed);
 
     printf("Finalizando o programa\n");
     GET_TIME(start);
 
     //show results - Desabilitado pois printar matriz de 2000 x 2000 é inviavel.
-    
+    /*
     printf("\nMatriz A\n");
     for(int i = 0; i < matrix_dimension; i++){
         for(int j = 0; j < matrix_dimension; j++){
@@ -124,6 +126,7 @@ int main(int argc, char* argv[]) {
         }
         puts("");
     }
+    */
     
     free(matrix_A);
     free(adjancent_B);
@@ -132,5 +135,8 @@ int main(int argc, char* argv[]) {
 
     GET_TIME(end);
     elapsed = end - start;
+    total_time += elapsed;
     printf("Finalização levou: %lf segundos\n", elapsed);
+    printf("Tempo total: %lf segundos\n", total_time);
+
 }
